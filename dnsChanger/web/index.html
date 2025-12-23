@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <style>
+
+        :root {
+
+            --bg: #0b0e14;
+
+            --accent: #6366f1;
+
+            --card: rgba(23, 28, 41, 0.8);
+
+        }
+
+        /* Убираем скролл */
+
+        html, body {
+
+            margin: 0;
+
+            padding: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            overflow: hidden;
+
+            background: var(--bg);
+
+            color: white;
+
+            font-family: 'Segoe UI', sans-serif;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+        }
+
+        .user-icon {
+
+            width: 70px; height: 70px;
+
+            border-radius: 50%;
+
+            border: 2px solid var(--accent);
+
+            margin: 20px 0 10px;
+
+            object-fit: cover;
+
+        }
+
+        .card {
+
+            background: var(--card);
+
+            backdrop-filter: blur(15px);
+
+            padding: 25px;
+
+            border-radius: 24px;
+
+            width: 320px;
+
+            text-align: center;
+
+            border: 1px solid rgba(255,255,255,0.05);
+
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+
+        }
+
+        select {
+
+            width: 100%; padding: 12px;
+
+            border-radius: 12px;
+
+            background: #1a1f2e; color: white;
+
+            border: 1px solid #334155;
+
+            margin-bottom: 15px; outline: none;
+
+        }
+
+        .btn {
+
+            width: 100%; padding: 12px;
+
+            border-radius: 12px; border: none;
+
+            color: white; font-weight: 600;
+
+            cursor: pointer; transition: 0.2s;
+
+            margin: 5px 0;
+
+        }
+
+        .btn-auto {
+
+            background: linear-gradient(45deg, #818cf8, #6366f1);
+
+            margin-bottom: 15px;
+
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+
+        }
+
+        .btn-set { background: #10b981; }
+
+        .btn-reset { background: rgba(255,255,255,0.05); color: #94a3b8; }
+
+        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+
+       
+
+        #status { margin: 15px 0; font-size: 13px; color: #818cf8; font-weight: 500; }
+
+        footer { margin-top: auto; padding-bottom: 15px; font-size: 10px; color: #475569; letter-spacing: 2px; }
+
+       
+
+        /* Анимация пульсации при автовыборе */
+
+        .pulse { animation: pulse-animation 1.5s infinite; }
+
+        @keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <img src="img/icon.png" class="user-icon">
+
+   
+
+    <div class="card">
+
+        <h3 style="margin:0 0 20px;">DNS ZMANOVSKIY</h3>
+
+       
+
+        <button id="btnAuto" class="btn btn-auto" onclick="autoOptimize()">⚡ Автоматический выбор лучшего DNS</button>
+
+
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px;"></div>
+
+
+
+        <select id="dnsProvider">
+
+            <option value="my_dns">XboxDNS (XboxDNS)</option>
+
+            <option value="google">Google DNS</option>
+
+            <option value="cloudflare">Cloudflare</option>
+
+            <option value="adguard">AdGuard</option>
+
+        </select>
+
+
+
+        <button class="btn btn-set" onclick="setDns()">Подключить выбранный DNS</button>
+
+        <button class="btn btn-reset" onclick="resetDns()">Выключить DNS</button>
+
+
+
+        <div id="status">Режим ожидания</div>
+
+    </div>
+
+
+
+
+
+    <script type="text/javascript" src="/eel.js"></script>
+
+    <script>
+
+        async function autoOptimize() {
+
+            const status = document.getElementById('status');
+
+            const btn = document.getElementById('btnAuto');
+
+           
+
+            status.innerText = "🔍 Тестируем задержки...";
+
+            btn.classList.add('pulse');
+
+           
+
+            let data = await eel.auto_select_best()();
+
+           
+
+            if(data.error) {
+
+                status.innerText = "❌ Ошибка сети";
+
+            } else {
+
+                document.getElementById('dnsProvider').value = data.best;
+
+                status.innerText = `🚀 Найден лучший DNS: ${data.best} (${data.ping}ms)`;
+
+                await eel.py_set_dns(data.best)();
+
+            }
+
+            btn.classList.remove('pulse');
+
+        }
+
+
+
+        async function setDns() {
+
+            const p = document.getElementById('dnsProvider').value;
+
+            document.getElementById('status').innerText = "Внедрение выбранного DNS...";
+
+            let res = await eel.py_set_dns(p)();
+
+            document.getElementById('status').innerText = res;
+
+        }
+
+
+
+        async function resetDns() {
+
+            document.getElementById('status').innerText = "Убираем DNS...";
+
+            let res = await eel.py_reset_dns()();
+
+            document.getElementById('status').innerText = res;
+
+        }
+
+    </script>
+
+</body>
+
+</html>
